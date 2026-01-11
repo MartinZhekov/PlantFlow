@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -14,7 +13,9 @@ import {
   Clock,
   TrendingUp,
   Settings,
-  Bell
+  Bell,
+  AlertTriangle,
+  Leaf
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,116 +27,85 @@ import { createPageUrl } from '@/utils';
 import AreaChartComponent from '@/components/charts/AreaChartComponent';
 import PumpControl from '@/components/ui/PumpControl';
 import { cn } from '@/lib/utils';
+import { api } from '@/api/api';
 
-// Mock plant data
-const mockPlantDetails = {
-  id: 1,
-  name: 'Monstera Deliciosa',
-  species: 'Swiss Cheese Plant',
-  image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800&h=600&fit=crop',
-  health: 'excellent',
-  description: 'A tropical plant known for its unique leaf holes and easy care requirements. Thrives in indirect light with regular watering.',
-  location: 'Living Room - Window Side',
-  addedDate: '2024-01-15',
-  currentReadings: {
-    moisture: 72,
-    temperature: 24.5,
-    humidity: 65,
-    light: 8500
-  },
-  optimalRanges: {
-    moisture: { min: 40, max: 80 },
-    temperature: { min: 18, max: 30 },
-    humidity: { min: 50, max: 80 },
-    light: { min: 5000, max: 15000 }
-  },
-  careSchedule: {
-    lastWatered: '2 hours ago',
-    nextWatering: 'In 22 hours',
-    lastFertilized: '2 weeks ago',
-    nextFertilizing: 'In 2 weeks'
-  },
-  alerts: {
-    lowMoisture: true,
-    autoWatering: true,
-    lightReminder: false
-  }
-};
-
-// Generate mock history data
-const generateHistoryData = () => {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return days.map(day => ({
-    time: day,
-    moisture: 40 + Math.random() * 40,
-    temperature: 20 + Math.random() * 8,
-    humidity: 50 + Math.random() * 30,
-    light: 5000 + Math.random() * 10000
-  }));
+// Default ranges (could be moved to DB later)
+const DEFAULT_RANGES = {
+  soil_moisture: { min: 40, max: 80 },
+  temperature: { min: 18, max: 30 },
+  air_humidity: { min: 50, max: 80 },
+  light: { min: 5000, max: 15000 }
 };
 
 export default function PlantDetails() {
   const [pumpOn, setPumpOn] = useState(false);
-  const [alerts, setAlerts] = useState(mockPlantDetails.alerts);
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const deviceId = queryParams.get('id');
+  const [alerts, setAlerts] = useState({
+    lowMoisture: true,
+    autoWatering: true,
+    lightReminder: false
+  });
 
-  // Fetch device data
-  const { data: device, isLoading } = useQuery({
+  const { id: deviceId } = useParams();
+
+  // Fetch device details
+  const { data: deviceResponse, isLoading: isDeviceLoading, isError, error } = useQuery({
     queryKey: ['device', deviceId],
-    queryFn: async () => {
-      if (!deviceId) return null;
-      const devices = await base44.entities.Device.list();
-      return devices.find(d => d.id === deviceId);
-    },
+    queryFn: () => api.devices.get(deviceId),
     enabled: !!deviceId
   });
 
-  // Use device data if available, otherwise fallback to mock
+  // Fetch chart data (last 24h)
+  const { data: chartResponse } = useQuery({
+    queryKey: ['device', deviceId, 'chart'],
+    queryFn: () => api.sensors.getChartData(deviceId, 24, 60),
+    enabled: !!deviceId
+  });
+
+  const device = deviceResponse?.data;
+  const rawChartData = chartResponse?.data || [];
+
+  // Map chart data
+  const historyData = rawChartData.map(point => ({
+    time: new Date(point.time_bucket).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    soil_moisture: point.soil_moisture,
+    temperature: point.temperature,
+    air_humidity: point.air_humidity,
+    light: point.light
+  }));
+
+  const isLoading = isDeviceLoading;
+
+  // Prepare plant object
   const plant = device ? {
     id: device.id,
     name: device.plant_name || 'Unnamed Plant',
     species: device.plant_species || 'Unknown Species',
-    image: device.plant_image || mockPlantDetails.image,
-    health: device.health_status || 'good',
-    description: mockPlantDetails.description,
+    image: device.plant_image,
     location: device.location || 'Not specified',
-    addedDate: new Date(device.created_date).toLocaleDateString(),
-    currentReadings: {
-      moisture: device.soil_moisture || 0,
-      temperature: device.air_temperature || 0,
-      humidity: device.air_humidity || 0,
-      light: device.light_intensity || 0
+    health: 'good', // Placeholder
+    description: 'Monitoring via PlantFlow Sensor',
+    addedDate: new Date(device.created_at).toLocaleDateString(),
+    currentReadings: device.current_reading || {
+      soil_moisture: 0,
+      temperature: 0,
+      air_humidity: 0,
+      light: 0
     },
-    optimalRanges: mockPlantDetails.optimalRanges,
+    optimalRanges: DEFAULT_RANGES,
     careSchedule: {
-      lastWatered: device.last_watered ? new Date(device.last_watered).toLocaleString() : 'Never',
-      nextWatering: 'In 22 hours',
-      lastFertilized: '2 weeks ago',
-      nextFertilizing: 'In 2 weeks'
-    },
-    alerts: mockPlantDetails.alerts
-  } : mockPlantDetails;
-
-  useEffect(() => {
-    if (device) {
-      setPumpOn(device.pump_status === 'on');
+      lastWatered: 'Unknown',
+      nextWatering: 'Unknown',
+      lastFertilized: 'Unknown',
+      nextFertilizing: 'Unknown'
     }
-  }, [device]);
+  } : null;
 
-  const historyData = generateHistoryData();
 
   const getStatusColor = (value, range) => {
+    if (!range) return 'text-slate-600';
     if (value >= range.min && value <= range.max) return 'text-emerald-600';
     if (value < range.min * 0.8 || value > range.max * 1.2) return 'text-red-600';
     return 'text-amber-600';
-  };
-
-  const getProgressColor = (value, range) => {
-    if (value >= range.min && value <= range.max) return 'bg-emerald-500';
-    if (value < range.min * 0.8 || value > range.max * 1.2) return 'bg-red-500';
-    return 'bg-amber-500';
   };
 
   if (isLoading) {
@@ -151,7 +121,28 @@ export default function PlantDetails() {
     );
   }
 
-  if (!device && deviceId) {
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-red-100 flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">Failed to load plant</h3>
+          <p className="text-slate-600 mb-6 max-w-md mx-auto">
+            {error?.message || "There was a problem connecting to the sensor device."}
+          </p>
+          <Link to={createPageUrl('Plants')}>
+            <Button>Back to Plants</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback if no ID
+  if (!plant && deviceId) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -164,8 +155,10 @@ export default function PlantDetails() {
     );
   }
 
+  if (!plant) return null;
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 w-full mx-auto">
       {/* Back Button */}
       <Link to={createPageUrl('Plants')}>
         <Button variant="ghost" className="gap-2 text-slate-600 hover:text-slate-800">
@@ -182,11 +175,20 @@ export default function PlantDetails() {
       >
         {/* Plant Image */}
         <div className="relative rounded-2xl overflow-hidden aspect-[4/3] lg:aspect-square">
-          <img
-            src={plant.image}
-            alt={plant.name}
-            className="w-full h-full object-cover"
-          />
+          <div
+            className="w-full h-full bg-cover bg-center"
+            style={{
+              backgroundImage: plant.image
+                ? `url(${plant.image})`
+                : 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+            }}
+          >
+            {!plant.image && (
+              <div className="w-full h-full flex items-center justify-center">
+                <Leaf className="w-20 h-20 text-emerald-500 opacity-40" />
+              </div>
+            )}
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           <Badge className="absolute top-4 right-4 bg-emerald-500 text-white border-0">
             <Heart className="w-3 h-3 mr-1" />
@@ -222,8 +224,12 @@ export default function PlantDetails() {
                 <Clock className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">Last Watered</p>
-                <p className="text-sm font-medium text-slate-700">{plant.careSchedule.lastWatered}</p>
+                <p className="text-xs text-slate-500">Last Reading</p>
+                <p className="text-sm font-medium text-slate-700">
+                  {plant.currentReadings.timestamp
+                    ? new Date(plant.currentReadings.timestamp).toLocaleTimeString()
+                    : 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -232,29 +238,29 @@ export default function PlantDetails() {
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center p-3 bg-blue-50 rounded-xl">
               <Droplets className="w-5 h-5 mx-auto text-blue-600 mb-1" />
-              <p className={cn('text-lg font-bold', getStatusColor(plant.currentReadings.moisture, plant.optimalRanges.moisture))}>
-                {plant.currentReadings.moisture}%
+              <p className={cn('text-lg font-bold', getStatusColor(plant.currentReadings.soil_moisture, plant.optimalRanges.soil_moisture))}>
+                {plant.currentReadings.soil_moisture?.toFixed(0)}%
               </p>
               <p className="text-xs text-slate-500">Moisture</p>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-xl">
               <Thermometer className="w-5 h-5 mx-auto text-red-500 mb-1" />
               <p className={cn('text-lg font-bold', getStatusColor(plant.currentReadings.temperature, plant.optimalRanges.temperature))}>
-                {plant.currentReadings.temperature}°
+                {plant.currentReadings.temperature?.toFixed(1)}°
               </p>
               <p className="text-xs text-slate-500">Temp</p>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-xl">
               <Wind className="w-5 h-5 mx-auto text-purple-500 mb-1" />
-              <p className={cn('text-lg font-bold', getStatusColor(plant.currentReadings.humidity, plant.optimalRanges.humidity))}>
-                {plant.currentReadings.humidity}%
+              <p className={cn('text-lg font-bold', getStatusColor(plant.currentReadings.air_humidity, plant.optimalRanges.air_humidity))}>
+                {plant.currentReadings.air_humidity?.toFixed(0)}%
               </p>
               <p className="text-xs text-slate-500">Humidity</p>
             </div>
             <div className="text-center p-3 bg-amber-50 rounded-xl">
               <Sun className="w-5 h-5 mx-auto text-amber-500 mb-1" />
               <p className={cn('text-lg font-bold', getStatusColor(plant.currentReadings.light, plant.optimalRanges.light))}>
-                {(plant.currentReadings.light / 1000).toFixed(1)}k
+                {(plant.currentReadings.light / 1000)?.toFixed(1)}k
               </p>
               <p className="text-xs text-slate-500">Light</p>
             </div>
@@ -275,9 +281,9 @@ export default function PlantDetails() {
         <TabsContent value="readings" className="mt-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              { key: 'moisture', label: 'Soil Moisture', icon: Droplets, color: 'blue', unit: '%' },
+              { key: 'soil_moisture', label: 'Soil Moisture', icon: Droplets, color: 'blue', unit: '%' },
               { key: 'temperature', label: 'Temperature', icon: Thermometer, color: 'red', unit: '°C' },
-              { key: 'humidity', label: 'Air Humidity', icon: Wind, color: 'purple', unit: '%' },
+              { key: 'air_humidity', label: 'Air Humidity', icon: Wind, color: 'purple', unit: '%' },
               { key: 'light', label: 'Light Intensity', icon: Sun, color: 'amber', unit: ' lux' }
             ].map((sensor) => (
               <Card key={sensor.key} className="border-slate-100">
@@ -290,7 +296,7 @@ export default function PlantDetails() {
                       <div>
                         <p className="font-medium text-slate-700">{sensor.label}</p>
                         <p className="text-xs text-slate-400">
-                          Optimal: {plant.optimalRanges[sensor.key].min}-{plant.optimalRanges[sensor.key].max}{sensor.unit}
+                          Optimal: {plant.optimalRanges[sensor.key]?.min}-{plant.optimalRanges[sensor.key]?.max}{sensor.unit}
                         </p>
                       </div>
                     </div>
@@ -302,7 +308,7 @@ export default function PlantDetails() {
                     </p>
                   </div>
                   <Progress
-                    value={(plant.currentReadings[sensor.key] / plant.optimalRanges[sensor.key].max) * 100}
+                    value={(plant.currentReadings[sensor.key] / Math.max(100, plant.optimalRanges[sensor.key]?.max * 1.5)) * 100}
                     className="h-2"
                   />
                 </CardContent>
@@ -325,13 +331,13 @@ export default function PlantDetails() {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Droplets className="w-4 h-4 text-blue-500" />
-                  Moisture History (7 days)
+                  Moisture History (24h)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <AreaChartComponent
                   data={historyData}
-                  dataKey="moisture"
+                  dataKey="soil_moisture"
                   color="#3B82F6"
                   gradientId="moistureHistory"
                   title="Moisture"
@@ -343,7 +349,7 @@ export default function PlantDetails() {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Thermometer className="w-4 h-4 text-red-500" />
-                  Temperature History (7 days)
+                  Temperature History (24h)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -362,57 +368,8 @@ export default function PlantDetails() {
 
         {/* Care Schedule Tab */}
         <TabsContent value="care" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-slate-100">
-              <CardHeader>
-                <CardTitle className="text-base">Watering Schedule</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Droplets className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="font-medium text-slate-700">Last Watered</p>
-                      <p className="text-sm text-slate-500">{plant.careSchedule.lastWatered}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-emerald-600" />
-                    <div>
-                      <p className="font-medium text-slate-700">Next Watering</p>
-                      <p className="text-sm text-slate-500">{plant.careSchedule.nextWatering}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-100">
-              <CardHeader>
-                <CardTitle className="text-base">Fertilizing Schedule</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="w-5 h-5 text-amber-600" />
-                    <div>
-                      <p className="font-medium text-slate-700">Last Fertilized</p>
-                      <p className="text-sm text-slate-500">{plant.careSchedule.lastFertilized}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-medium text-slate-700">Next Fertilizing</p>
-                      <p className="text-sm text-slate-500">{plant.careSchedule.nextFertilizing}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="p-4 rounded-xl bg-slate-50 text-center text-slate-500">
+            Care schedule tracking not connected to sensors yet.
           </div>
         </TabsContent>
 

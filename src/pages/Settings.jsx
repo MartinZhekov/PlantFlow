@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+// import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -107,9 +107,9 @@ export default function Settings() {
     queryKey: ['devices', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const allDevices = await base44.entities.Device.list();
-      // Filter devices by created_by to show only current user's devices
-      return allDevices.filter(device => device.created_by === user.email);
+      // const allDevices = await base44.entities.Device.list();
+      // // Filter devices by created_by to show only current user's devices
+      // return allDevices.filter(device => device.created_by === user.email);
     },
     enabled: !!user?.id
   });
@@ -126,11 +126,11 @@ export default function Settings() {
         ).join(':')
       };
 
-      if (editDevice) {
-        return await base44.entities.Device.update(editDevice.id, dataToSave);
-      } else {
-        return await base44.entities.Device.create(dataToSave);
-      }
+      // if (editDevice) {
+      //   return await base44.entities.Device.update(editDevice.id, dataToSave);
+      // } else {
+      //   return await base44.entities.Device.create(dataToSave);
+      // }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
@@ -146,7 +146,7 @@ export default function Settings() {
   // Delete device mutation
   const deleteDeviceMutation = useMutation({
     mutationFn: async (deviceId) => {
-      await base44.entities.Device.delete(deviceId);
+      // await base44.entities.Device.delete(deviceId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });

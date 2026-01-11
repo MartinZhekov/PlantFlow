@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Device {
+  id            String   @id @db.VarChar(100)
+  plantName     String   @map("plant_name") @db.VarChar(200)
+  plantSpecies  String?  @map("plant_species") @db.VarChar(200)
+  location      String?  @db.VarChar(200)
+  plantImage    String?  @map("plant_image") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  sensorReadings SensorReading[]
+  
+  @@map("devices")
+}
+
+model SensorReading {
+  id           Int      @id @default(autoincrement())
+  deviceId     String   @map("device_id") @db.VarChar(100)
+  temperature  Float?
+  airHumidity  Float?   @map("air_humidity")
+  soilMoisture Float?   @map("soil_moisture")
+  light        Float?
+  timestamp    DateTime @default(now())
+  
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  
+  @@index([deviceId, timestamp(sort: Desc)])
+  @@map("sensor_readings")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  fullName  String?  @map("full_name")
+  role      String   @default("USER") // "USER", "ADMIN"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}

@@ -1,0 +1,75 @@
+const API_BASE_URL = 'http://localhost:3001/api';
+
+/**
+ * Helper to handle fetch requests
+ */
+async function request(endpoint, options = {}) {
+    // Add auth token if available
+    const token = localStorage.getItem('auth_token');
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || data.error || 'API request failed');
+    }
+
+    return data;
+}
+
+export const api = {
+    // Auth endpoints
+    auth: {
+        login: (credentials) => request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        }),
+        register: (data) => request('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        me: () => request('/auth/me')
+    },
+
+    // Device endpoints
+    devices: {
+        list: () => request('/devices'),
+        get: (id) => request(`/devices/${id}`),
+        create: (data) => request('/devices', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+        update: (id, data) => request(`/devices/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+        delete: (id) => request(`/devices/${id}`, {
+            method: 'DELETE',
+        }),
+    },
+
+    // Sensor endpoints
+    sensors: {
+        getLatest: (deviceId) => request(`/sensors/${deviceId}/latest`),
+        getReadings: (deviceId, params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return request(`/sensors/${deviceId}/readings?${queryString}`);
+        },
+        getStats: (deviceId, hours = 24) =>
+            request(`/sensors/${deviceId}/stats?hours=${hours}`),
+        getChartData: (deviceId, hours = 24, interval = 60) =>
+            request(`/sensors/${deviceId}/chart?hours=${hours}&interval=${interval}`),
+    },
+};

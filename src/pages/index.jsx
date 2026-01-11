@@ -15,7 +15,7 @@ export default function Pages() {
           <Route path="/" element={<Analytics />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/plant-details" element={<PlantDetails />} />
+          <Route path="/plant-details/:id" element={<PlantDetails />} />
           <Route path="/register" element={<Register />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/signin" element={<SignIn />} />

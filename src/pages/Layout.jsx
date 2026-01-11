@@ -18,16 +18,15 @@ export default function Layout({ children }) {
   useEffect(() => {
     const checkAuth = () => {
       const user = localStorage.getItem('plantpulse_user');
-      const publicPages = ['/register', '/signin'];
+      const publicPages = ['/register', '/signin',];
       const isPublicPage = publicPages.some(page => location.pathname.includes(page));
-      
       if (!user && !isPublicPage) {
         // Redirect to login
-        navigate(createPageUrl('SignIn'));
+        navigate(createPageUrl('signin'));
         setIsLoading(false);
       } else if (user && isPublicPage) {
         // Already logged in, redirect to dashboard
-        navigate(createPageUrl('Dashboard'));
+        navigate(createPageUrl('dashboard'));
         setIsLoading(false);
       } else {
         setIsAuthenticated(!!user);
@@ -35,7 +34,7 @@ export default function Layout({ children }) {
       }
     };
     setIsLoading(false);
-    // checkAuth();
+    checkAuth();
   }, [navigate, location.pathname]);
   
 

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// import { base44 } from '@/api/base44Client';
+import { api } from '@/api/api';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
@@ -51,48 +51,27 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      // Check if email already exists
-      const existingUsers = await base44.entities.UserAccount.filter({ 
-        email: formData.email 
-      });
-
-      if (existingUsers.length > 0) {
-        toast.error('Email already registered');
-        setIsLoading(false);
-        return;
-      }
-
-      // Create new user
-      const newUser = await base44.entities.UserAccount.create({
+      // Register via API
+      const response = await api.auth.register({
         full_name: formData.full_name,
         email: formData.email,
         password: formData.password,
-        avatar_color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
-        preferences: {
-          notifications: {
-            lowMoisture: true,
-            highTemperature: true,
-            pumpActivation: true,
-            dailyReport: false,
-            systemAlerts: true
-          },
-          theme: 'light'
-        }
       });
 
-      // Store user in localStorage
-      localStorage.setItem('plantpulse_user', JSON.stringify({
-        id: newUser.id,
-        email: newUser.email,
-        full_name: newUser.full_name,
-        avatar_color: newUser.avatar_color
-      }));
+      if (response && (response.success || response.data)) {
+        const token = response.data?.token || response.token;
+        const user = response.data?.user || response.user;
 
-      toast.success('Account created successfully!');
-      navigate(createPageUrl('Dashboard'));
+        // Store user in localStorage
+        localStorage.setItem('plantpulse_user', JSON.stringify(user));
+        localStorage.setItem('auth_token', token);
+
+        toast.success('Account created successfully!');
+        navigate(createPageUrl('Dashboard'));
+      }
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('An error occurred. Please try again.');
+      toast.error(error.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -182,11 +161,11 @@ export default function Register() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ 
+              transition={{
                 type: "spring",
                 stiffness: 260,
                 damping: 20,
-                delay: 0.1 
+                delay: 0.1
               }}
               className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 shadow-2xl shadow-emerald-200"
             >

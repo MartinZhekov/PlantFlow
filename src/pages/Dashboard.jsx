@@ -1,94 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
   Leaf,
   Plus,
   BarChart3,
   Settings as SettingsIcon,
-  TrendingUp
+  TrendingUp,
+  Droplets,
+  Thermometer,
+  Wind,
+  Sun
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { createPageUrl } from '@/utils';
-import { cn } from '@/lib/utils';
 import AddDeviceDialog from '@/components/devices/AddDeviceDialog';
-
-// Mock sensor data
-const mockSensorData = {
-  temperature: { value: 24.5, unit: '°C', status: 'normal', trend: 2.3 },
-  airHumidity: { value: 65, unit: '%', status: 'normal', trend: -1.5 },
-  soilMoisture: { value: 42, unit: '%', status: 'warning', trend: -5.2 },
-  light: { value: 12500, unit: 'lux', status: 'normal', trend: 8.1 }
-};
-
-// Mock chart data
-const generateChartData = () => {
-  const hours = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'];
-  return hours.map(time => ({
-    time,
-    temperature: 20 + Math.random() * 8,
-    humidity: 50 + Math.random() * 30,
-    moisture: 30 + Math.random() * 40,
-    light: 5000 + Math.random() * 15000
-  }));
-};
+import { api } from '@/api/api';
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [devices, setDevices] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAddingDevice, setIsAddingDevice] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // const userStr = localStorage.getItem('plantpulse_user');
-    // if (userStr) {
-    //   setUser(JSON.parse(userStr));
-    // }
-  }, []);
+  // Fetch devices
+  const { data: devicesResponse, isLoading } = useQuery({
+    queryKey: ['devices'],
+    queryFn: api.devices.list
+  });
 
-  // Fetch user's devices
-  useEffect(() => {
-    const fetchDevices = async () => {
-      if (!user?.id) return;
-      setIsLoading(true);
-      try {
-        const allDevices = await base44.entities.Device.list();
-        const userDevices = allDevices.filter(device => device.created_by === user.email);
-        setDevices(userDevices);
-      } catch (error) {
-        console.error('Failed to fetch devices:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDevices();
-  }, [user?.id, user?.email]);
+  const devices = devicesResponse?.data || [];
+  const stats = { totalPlants: devices.length };
 
-  const handleSubmitDevice = async (deviceData) => {
-    setIsAddingDevice(true);
-    try {
-      const newDevice = await base44.entities.Device.create({
-        ...deviceData,
-        last_reading: new Date().toISOString()
-      });
-      setDevices(prev => [...prev, newDevice]);
+  // Create device mutation
+  const createDeviceMutation = useMutation({
+    mutationFn: (data) => {
+      // Map form data to API payload
+      const payload = {
+        id: data.serial_number,
+        plant_name: data.plant_name,
+        plant_species: data.plant_species,
+        location: data.location,
+        plant_image: data.plant_image
+      };
+      return api.devices.create(payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
       setDialogOpen(false);
       toast.success('Plant device added successfully! 🌱');
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error('Failed to add device: ' + error.message);
-    } finally {
-      setIsAddingDevice(false);
     }
+  });
+
+  const handleSubmitDevice = (deviceData) => {
+    createDeviceMutation.mutate(deviceData);
   };
 
-  // Calculate stats
-  const stats = {
-    totalPlants: devices.length
+  // Helper to get reading status color
+  const getStatusColor = (value, type) => {
+    // Simple thresholds for demo
+    if (!value) return 'text-slate-400';
+    return 'text-emerald-600';
   };
 
   return (
@@ -101,13 +77,13 @@ export default function Dashboard() {
       >
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">
-            Welcome back, {user?.full_name?.split(' ')[0] || 'User'}
+            My Garden
           </h1>
           <p className="text-slate-500 mt-1">
-            Here's what's happening with your plants today
+            Overview of your connected plants
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => setDialogOpen(true)}
           className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-emerald-200"
         >
@@ -139,9 +115,9 @@ export default function Dashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-slate-800">My Plants</h2>
-          <Button 
+          <Button
             onClick={() => setDialogOpen(true)}
-            variant="ghost" 
+            variant="ghost"
             size="sm"
             className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
           >
@@ -162,23 +138,21 @@ export default function Dashboard() {
           </div>
         ) : devices.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {devices.slice(0, 6).map((device, index) => (
+            {devices.map((device, index) => (
               <motion.div
                 key={device.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.05 }}
               >
-                <Link to={createPageUrl('PlantDetails') + `?id=${device.id}`}>
-                  <Card className="border-emerald-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-300 cursor-pointer group overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/0 to-green-50/0 group-hover:from-emerald-50/40 group-hover:to-green-50/20 transition-all duration-300" />
-                    
+                <Link to={createPageUrl('plant-details') + `/${device.id}`}>
+                  <Card className="border-emerald-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-300 cursor-pointer group overflow-hidden h-full">
                     <div className="relative h-48 overflow-hidden">
-                      <div 
+                      <div
                         className="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
-                        style={{ 
-                          backgroundImage: device.plant_image 
-                            ? `url(${device.plant_image})` 
+                        style={{
+                          backgroundImage: device.plant_image
+                            ? `url(${device.plant_image})`
                             : 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
                         }}
                       >
@@ -188,22 +162,51 @@ export default function Dashboard() {
                           </div>
                         )}
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                      {/* Status Overlay */}
+                      <div className="absolute bottom-3 left-4 right-4 text-white">
+                        <h3 className="font-bold text-xl mb-1 shadow-sm">
+                          {device.plant_name || 'Unnamed Plant'}
+                        </h3>
+                        <p className="text-sm opacity-90 shadow-sm flex items-center gap-1">
+                          {device.location && <span>📍 {device.location}</span>}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <CardContent className="p-5 relative">
-                      <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-xl mb-1">
-                        {device.plant_name || 'Unnamed Plant'}
-                      </h3>
-                      <p className="text-sm text-slate-500 mb-3">
-                        {device.plant_species || 'Unknown Species'}
-                      </p>
-                      {device.location && (
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <span className="text-base">📍</span>
-                          <span className="text-sm">{device.location}</span>
+
+                    <CardContent className="p-5">
+                      <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Live Status</h4>
+
+                      {device.current_reading ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center gap-2">
+                            <Droplets className="w-4 h-4 text-blue-500" />
+                            <span className="text-slate-700 font-medium">{device.current_reading.soil_moisture}%</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Thermometer className="w-4 h-4 text-red-500" />
+                            <span className="text-slate-700 font-medium">{device.current_reading.temperature}°C</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Wind className="w-4 h-4 text-purple-500" />
+                            <span className="text-slate-700 font-medium">{device.current_reading.air_humidity}%</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Sun className="w-4 h-4 text-amber-500" />
+                            <span className="text-slate-700 font-medium">{(device.current_reading.light / 1000).toFixed(1)}k</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-2 text-slate-400 text-sm bg-slate-50 rounded-lg">
+                          No sensor data waiting...
                         </div>
                       )}
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+                        <span>ID: {device.id}</span>
+                        <span>{device.plant_species}</span>
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -220,7 +223,7 @@ export default function Dashboard() {
               <p className="text-slate-600 mb-6 max-w-md mx-auto">
                 Add your first plant device to begin monitoring soil moisture, temperature, humidity, and light in real-time
               </p>
-              <Button 
+              <Button
                 onClick={() => setDialogOpen(true)}
                 className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-emerald-200"
               >
@@ -282,7 +285,7 @@ export default function Dashboard() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSubmit={handleSubmitDevice}
-        isLoading={isAddingDevice}
+        isLoading={createDeviceMutation.isPending}
       />
     </div>
   );

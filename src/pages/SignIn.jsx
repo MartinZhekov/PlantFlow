@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// import { base44 } from '@/api/base44Client'; // Removed base44 import
+import { api } from '@/api/api';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
@@ -24,40 +24,33 @@ export default function SignIn() {
     // if (user) {
     //   navigate(createPageUrl('Dashboard'));
     // }
-    console.log('SignIn component mounted');
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Custom authentication: Send login request to your API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+      setIsLoading(true);
+      // Login via API
+      const response = await api.auth.login({
+        email: formData.email,
+        password: formData.password,
       });
 
-      if (!response.ok) {
-        throw new Error('Invalid email or password');
+      if (response && (response.success || response.token)) {
+        const token = response.token || (response.data && response.data.token);
+        const user = response.user || (response.data && response.data.user);
+
+        // Store user and token in localStorage
+        localStorage.setItem('plantpulse_user', JSON.stringify(user));
+        localStorage.setItem('auth_token', token);
+
+        toast.success('Welcome back!');
+        navigate(createPageUrl('Dashboard'));
       }
-
-      const data = await response.json();
-
-      // Store user and token in localStorage
-      localStorage.setItem('plantpulse_user', JSON.stringify(data.user));
-      localStorage.setItem('auth_token', data.token);
-
-      toast.success('Welcome back!');
-      navigate(createPageUrl('Dashboard'));
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('An error occurred. Please try again.');
+      toast.error(error.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -146,11 +139,11 @@ export default function SignIn() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ 
+              transition={{
                 type: "spring",
                 stiffness: 260,
                 damping: 20,
-                delay: 0.1 
+                delay: 0.1
               }}
               className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 shadow-2xl shadow-emerald-200"
             >
@@ -271,7 +264,7 @@ export default function SignIn() {
             className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl"
           >
             <p className="text-xs text-blue-600 text-center">
-              💡 <strong>Demo:</strong> demo@plantpulse.com / demo123
+              💡 <strong>Demo:</strong> demo@plantpulse.com / demo123 (Or create new account!)
             </p>
           </motion.div>
         </motion.div>
