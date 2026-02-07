@@ -13,13 +13,13 @@ export default function Layout({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Check authentication
   useEffect(() => {
     const checkAuth = () => {
       const user = localStorage.getItem('plantpulse_user');
-      const publicPages = ['/register', '/signin',];
-      const isPublicPage = publicPages.some(page => location.pathname.includes(page));
+      const publicPages = ['/register', '/signin'];
+      const isPublicPage = publicPages.some(page => location.pathname.includes(page)) || location.pathname === '/';
       if (!user && !isPublicPage) {
         // Redirect to login
         navigate(createPageUrl('signin'));
@@ -36,7 +36,7 @@ export default function Layout({ children }) {
     setIsLoading(false);
     checkAuth();
   }, [navigate, location.pathname]);
-  
+
 
 
   if (isLoading) {
@@ -56,8 +56,10 @@ export default function Layout({ children }) {
 
   // Public pages (SignIn/Register) don't need the layout
   const publicPages = ['/register', '/signin'];
-  const isPublicPage = publicPages.some(page => location.pathname.includes(page));
-  
+  const isPublicPage = publicPages.some(page => location.pathname.includes(page)) || location.pathname === '/';
+
+
+
   if (isPublicPage) {
     return (
       <>
@@ -75,12 +77,12 @@ export default function Layout({ children }) {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-white to-green-50/40">
       <div className="">
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-        
+
         <div className="flex-1 min-h-screen flex flex-col lg:ml-0">
-          <TopBar 
+          <TopBar
             onMenuClick={() => setSidebarOpen(true)}
           />
-          
+
           <main className="flex-1 p-4 lg:p-6 overflow-auto">
             {children}
           </main>
@@ -88,7 +90,7 @@ export default function Layout({ children }) {
       </div>
 
       <Toaster position="top-right" richColors />
-      
+
       <style>{`
         :root {
           --color-primary: #10B981;

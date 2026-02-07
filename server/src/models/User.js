@@ -56,6 +56,32 @@ class User {
     }
 
     /**
+     * Update user
+     */
+    static async update(id, userData) {
+        const prisma = getDatabase();
+        const { email, password, full_name, role } = userData;
+
+        const dataToUpdate = {};
+        if (email) dataToUpdate.email = email;
+        if (full_name) dataToUpdate.fullName = full_name;
+        if (role) dataToUpdate.role = role;
+
+        // Hash password if provided
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            dataToUpdate.password = await bcrypt.hash(password, salt);
+        }
+
+        const user = await prisma.user.update({
+            where: { id },
+            data: dataToUpdate
+        });
+
+        return this._sanitize(user);
+    }
+
+    /**
      * Remove sensitive fields
      */
     static _sanitize(user) {

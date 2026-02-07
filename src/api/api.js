@@ -40,7 +40,11 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(data)
         }),
-        me: () => request('/auth/me')
+        me: () => request('/auth/me'),
+        updateProfile: (data) => request('/auth/me', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        })
     },
 
     // Device endpoints

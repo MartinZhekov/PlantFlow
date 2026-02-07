@@ -136,7 +136,7 @@ export default function TopBar({ onMenuClick }) {
                 <p className="text-xs text-slate-500">{user?.email || ''}</p>
               </div>
               <DropdownMenuItem className="cursor-pointer"
-                onClick>
+                onClick={() => navigate('/profile')}>
                 <User className="w-4 h-4 mr-2" />
                 My Profile
               </DropdownMenuItem>
