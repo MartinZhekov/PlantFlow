@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { 
-  Menu, 
-  Bell, 
+import {
+  Menu,
+  Bell,
   Clock,
   LogOut,
   User
@@ -23,7 +23,7 @@ export default function TopBar({ onMenuClick }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -54,23 +54,23 @@ export default function TopBar({ onMenuClick }) {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          
+
           <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500">
             <Clock className="w-4 h-4" />
             <span className="font-mono">
-              {currentTime.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+              {currentTime.toLocaleTimeString('en-US', {
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: true 
+                hour12: true
               })}
             </span>
           </div>
         </div>
-        
+
         {/* Right side - Status indicators */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Notifications */}
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5 text-slate-500" />
@@ -113,17 +113,17 @@ export default function TopBar({ onMenuClick }) {
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
-          </DropdownMenu>
-          
+          </DropdownMenu> */}
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm cursor-pointer shadow-lg"
-                style={{ 
-                  background: user?.avatar_color 
-                    ? `linear-gradient(135deg, ${user.avatar_color}, ${user.avatar_color}dd)` 
+                style={{
+                  background: user?.avatar_color
+                    ? `linear-gradient(135deg, ${user.avatar_color}, ${user.avatar_color}dd)`
                     : 'linear-gradient(135deg, #10B981, #059669)'
                 }}
               >
@@ -135,11 +135,12 @@ export default function TopBar({ onMenuClick }) {
                 <p className="font-semibold text-slate-800">{user?.full_name || 'User'}</p>
                 <p className="text-xs text-slate-500">{user?.email || ''}</p>
               </div>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer"
+                onClick>
                 <User className="w-4 h-4 mr-2" />
                 My Profile
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleLogout}
                 className="cursor-pointer text-red-600 focus:text-red-600"
               >

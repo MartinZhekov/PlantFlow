@@ -73,7 +73,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-white to-green-50/40">
-      <div className="flex">
+      <div className="">
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         
         <div className="flex-1 min-h-screen flex flex-col lg:ml-0">

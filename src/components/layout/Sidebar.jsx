@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Leaf, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Leaf,
+  BarChart3,
+  Settings,
   Sprout,
   ChevronLeft
 } from 'lucide-react';
@@ -26,17 +26,17 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
-      
+
       <motion.aside
         initial={false}
         animate={{ x: isOpen ? 0 : -280 }}
         className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-slate-100',
+          'fixed inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-slate-100',
           'flex flex-col transition-transform lg:translate-x-0'
         )}
       >
@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             </div>
           </Link>
         </div>
-        
+
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
@@ -64,8 +64,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                 onClick={() => setIsOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
-                  isActive 
-                    ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700' 
+                  isActive
+                    ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700'
                     : 'text-slate-600 hover:bg-emerald-50/50 hover:text-slate-800'
                 )}
               >
@@ -84,7 +84,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             );
           })}
         </nav>
-        
+
         {/* Footer */}
         <div className="p-4 border-t border-emerald-100">
           <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 border border-emerald-200">
@@ -99,7 +99,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             </div>
           </div>
         </div>
-        
+
         {/* Close button for mobile */}
         <button
           onClick={() => setIsOpen(false)}

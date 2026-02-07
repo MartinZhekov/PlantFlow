@@ -115,15 +115,6 @@ export default function Dashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-slate-800">My Plants</h2>
-          <Button
-            onClick={() => setDialogOpen(true)}
-            variant="ghost"
-            size="sm"
-            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Plant
-          </Button>
         </div>
 
         {isLoading ? (
