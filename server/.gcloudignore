@@ -1,0 +1,9 @@
+node_modules/
+.git/
+.gitignore
+*.log
+test_backend.sh
+docs/
+.env
+.env.local
+README.md

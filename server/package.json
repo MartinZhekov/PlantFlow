@@ -2,23 +2,17 @@
     "name": "plantflow-server",
     "version": "1.0.0",
     "description": "REST API server for PlantFlow with MQTT integration",
-    "main": "src/index.js",
+    "main": "function.js",
     "type": "module",
     "scripts": {
         "start": "node src/index.js",
         "dev": "node --watch src/index.js",
+        "deploy": "gcloud functions deploy plantflow-api --gen2 --runtime nodejs20 --region europe-west3 --source . --entry-point plantflow --trigger-http --allow-unauthenticated --memory 512MB --timeout 60s --env-vars-file .env.yaml --vpc-connector plantflow-connector --egress-settings all",
+        "postinstall": "prisma generate",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "keywords": [
-        "mqtt",
-        "iot",
-        "plant-monitoring",
-        "esp32",
-        "rest-api"
-    ],
-    "author": "",
-    "license": "MIT",
     "dependencies": {
+        "@google-cloud/functions-framework": "^3.4.0",
         "@prisma/client": "^5.22.0",
         "bcryptjs": "^3.0.3",
         "cors": "^2.8.5",
