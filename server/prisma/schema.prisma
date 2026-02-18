@@ -70,6 +70,7 @@ model User {
   password  String
   fullName  String?  @map("full_name")
   role      String   @default("USER") // "USER", "ADMIN"
+  profilePicture String? @map("profile_picture") @db.Text
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   

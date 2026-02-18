@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -25,7 +26,8 @@ import {
   Wind,
   Download,
   RefreshCw,
-  Loader2
+  Loader2,
+  ArrowLeft,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,6 +81,7 @@ const formatTimestamp = (timestamp, period) => {
 export default function Analytics() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState('week');
   const [loading, setLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -218,6 +221,13 @@ export default function Analytics() {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-600 transition-colors mb-2 group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            Back
+          </button>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">
             {t('analytics.title')}
           </h1>

@@ -1,4 +1,5 @@
 import Layout from "./Layout.jsx";
+import AdminLayout from "./AdminLayout.jsx";
 import Analytics from "./Analytics";
 import Dashboard from "./Dashboard";
 import PlantDetails from "./PlantDetails";
@@ -17,24 +18,41 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 export default function Pages() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/plant-details/:id" element={<PlantDetails />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/signin" element={<SignIn />} />
+      <Routes>
+        {/* Public routes (no layout) */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/signin" element={<SignIn />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-          <Route path="/admin/devices" element={<AdminRoute><AdminDevices /></AdminRoute>} />
-          <Route path="/admin/alerts" element={<AdminRoute><AdminAlerts /></AdminRoute>} />
-        </Routes>
-      </Layout>
+        {/* Regular user routes (green layout) */}
+        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+        <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+        <Route path="/plant-details/:id" element={<Layout><PlantDetails /></Layout>} />
+        <Route path="/profile" element={<Layout><Profile /></Layout>} />
+        <Route path="/settings" element={<Layout><Settings /></Layout>} />
+
+        {/* Admin routes (dark purple admin layout) */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminLayout><AdminDashboard /></AdminLayout>
+          </AdminRoute>
+        } />
+        <Route path="/admin/users" element={
+          <AdminRoute>
+            <AdminLayout><AdminUsers /></AdminLayout>
+          </AdminRoute>
+        } />
+        <Route path="/admin/devices" element={
+          <AdminRoute>
+            <AdminLayout><AdminDevices /></AdminLayout>
+          </AdminRoute>
+        } />
+        <Route path="/admin/alerts" element={
+          <AdminRoute>
+            <AdminLayout><AdminAlerts /></AdminLayout>
+          </AdminRoute>
+        } />
+      </Routes>
     </Router>
   );
 }

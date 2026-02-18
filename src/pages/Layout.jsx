@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import { Toaster } from 'sonner';
 import { createPageUrl } from '@/utils';
-import { set } from 'date-fns';
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,26 +16,15 @@ export default function Layout({ children }) {
   useEffect(() => {
     const checkAuth = () => {
       const user = localStorage.getItem('plantpulse_user');
-      const publicPages = ['/register', '/signin'];
-      const isPublicPage = publicPages.some(page => location.pathname.includes(page)) || location.pathname === '/';
-      if (!user && !isPublicPage) {
-        // Redirect to login
+      if (!user) {
         navigate(createPageUrl('signin'));
-        setIsLoading(false);
-      } else if (user && isPublicPage) {
-        // Already logged in, redirect to dashboard
-        navigate(createPageUrl('dashboard'));
-        setIsLoading(false);
       } else {
-        setIsAuthenticated(!!user);
-        setIsLoading(false);
+        setIsAuthenticated(true);
       }
+      setIsLoading(false);
     };
-    setIsLoading(false);
     checkAuth();
   }, [navigate, location.pathname]);
-
-
 
   if (isLoading) {
     return (
@@ -51,21 +38,6 @@ export default function Layout({ children }) {
           <p className="text-slate-600 font-medium">Loading PlantPulse...</p>
         </div>
       </div>
-    );
-  }
-
-  // Public pages (SignIn/Register) don't need the layout
-  const publicPages = ['/register', '/signin'];
-  const isPublicPage = publicPages.some(page => location.pathname.includes(page)) || location.pathname === '/';
-
-
-
-  if (isPublicPage) {
-    return (
-      <>
-        {children}
-        <Toaster position="top-right" richColors />
-      </>
     );
   }
 

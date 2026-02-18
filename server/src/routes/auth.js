@@ -124,7 +124,7 @@ router.get('/me', verifyToken, async (req, res, next) => {
  */
 router.put('/me', verifyToken, async (req, res, next) => {
     try {
-        const { email, password, full_name } = req.body;
+        const { email, password, full_name, profile_picture } = req.body;
 
         // Basic validation
         if (email === '') {
@@ -146,7 +146,8 @@ router.put('/me', verifyToken, async (req, res, next) => {
         const updatedUser = await User.update(req.user.id, {
             email,
             password,
-            full_name
+            full_name,
+            profile_picture
         });
 
         res.json({

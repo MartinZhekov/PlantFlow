@@ -60,12 +60,13 @@ class User {
      */
     static async update(id, userData) {
         const prisma = getDatabase();
-        const { email, password, full_name, role } = userData;
+        const { email, password, full_name, role, profile_picture } = userData;
 
         const dataToUpdate = {};
         if (email) dataToUpdate.email = email;
         if (full_name) dataToUpdate.fullName = full_name;
         if (role) dataToUpdate.role = role;
+        if (profile_picture !== undefined) dataToUpdate.profilePicture = profile_picture;
 
         // Hash password if provided
         if (password) {
@@ -87,7 +88,12 @@ class User {
     static _sanitize(user) {
         if (!user) return null;
         const { password, ...safeUser } = user;
-        return safeUser;
+        // Map Prisma camelCase back to snake_case for API consistency
+        return {
+            ...safeUser,
+            full_name: safeUser.fullName,
+            profile_picture: safeUser.profilePicture,
+        };
     }
 
     /**

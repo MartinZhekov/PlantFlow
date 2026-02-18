@@ -14,6 +14,9 @@ export function initMqttClient(config) {
         clean: true,
         reconnectPeriod: 5000,
         connectTimeout: 30000,
+        keepalive: 60,
+        resubscribe: true,
+        rejectUnauthorized: false,  // Allow self-signed certificates
     };
 
     // Add credentials if provided
