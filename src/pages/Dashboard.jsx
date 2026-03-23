@@ -65,15 +65,15 @@ function SensorTile({ sensor, reading, hasData }) {
   const value = formatValue(sensor, reading);
 
   return (
-    <div className={`${c.bg} rounded-xl p-3 flex flex-col gap-1.5`}>
-      <div className="flex items-center justify-between">
+    <div className={`${c.bg} rounded-xl p-3 flex flex-col h-full`}>
+      <div className="flex items-center justify-between mb-2">
         <Icon className={`w-3.5 h-3.5 ${c.icon}`} />
         <span className={`text-[11px] font-bold ${hasData ? c.text : 'text-slate-300'} truncate ml-1 text-right`}>
           {hasData ? `${value}${sensor.unit}` : '—'}
         </span>
       </div>
       {/* Progress bar */}
-      <div className="h-1 rounded-full bg-white/60 overflow-hidden">
+      <div className="h-1 rounded-full bg-white/60 overflow-hidden mb-2">
         {hasData && (
           <div
             className={`h-full rounded-full ${c.bar} transition-all duration-700`}
@@ -81,7 +81,9 @@ function SensorTile({ sensor, reading, hasData }) {
           />
         )}
       </div>
-      <p className="text-[10px] text-slate-400 leading-none">{sensor.label}</p>
+      <div className="mt-auto">
+        <p className="text-[10px] text-slate-400 leading-none">{sensor.label}</p>
+      </div>
     </div>
   );
 }
@@ -92,8 +94,8 @@ function PlantCard({ device, index, isLive }) {
   const hasData = !!device.current_reading;
 
   return (
-    <Link to={createPageUrl('plant-details') + `/${device.id}`}>
-      <Card className={`border-slate-100 hover:shadow-2xl hover:border-emerald-200 transition-all duration-300 cursor-pointer group overflow-hidden h-full ${isLive ? 'ring-2 ring-emerald-400/60 shadow-emerald-100' : ''}`}>
+    <Link to={createPageUrl('plant-details') + `/${device.id}`} className="block h-full">
+      <Card className={`flex flex-col border-slate-100 hover:shadow-2xl hover:border-emerald-200 transition-all duration-300 cursor-pointer group overflow-hidden ${isLive ? 'ring-2 ring-emerald-400/60 shadow-emerald-100' : ''}`}>
 
         {/* ── Image area ── */}
         <div className="relative h-52 overflow-hidden">
@@ -152,32 +154,32 @@ function PlantCard({ device, index, isLive }) {
         </div>
 
         {/* ── Sensor tiles ── */}
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex-1 flex flex-col">
           {hasData ? (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2 flex-1">
               {SENSORS.map(s => (
                 <SensorTile key={s.key} sensor={s} reading={device.current_reading} hasData={true} />
               ))}
             </div>
           ) : (
             /* No-data state — full-width faded tiles + pulsing dot */
-            <div className="space-y-2">
-              <div className="grid grid-cols-4 gap-2">
+            <div className="space-y-2 flex-1 flex flex-col">
+              <div className="grid grid-cols-4 gap-2 flex-1">
                 {SENSORS.map(s => (
                   <SensorTile key={s.key} sensor={s} reading={null} hasData={false} />
                 ))}
               </div>
-              <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+              {/* <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 mt-auto pt-2">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-slate-300" />
                 </span>
                 Waiting for first reading…
-              </p>
+              </p> */}
             </div>
           )}
 
-          {/* Footer */}
+          {/* Footer
           <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
             <span className="text-xs text-slate-400 italic truncate max-w-[60%]">
               {device.plant_species && device.plant_species.toLowerCase() !== 'unknown species' && device.plant_species.toLowerCase() !== 'unknown'
@@ -187,7 +189,7 @@ function PlantCard({ device, index, isLive }) {
             <span className="text-xs text-emerald-600 font-medium flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
               View <ChevronRight className="w-3 h-3" />
             </span>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </Link>
@@ -443,6 +445,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + index * 0.06 }}
+                className="h-full"
               >
                 <PlantCard
                   device={device}

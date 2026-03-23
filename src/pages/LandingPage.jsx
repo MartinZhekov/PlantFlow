@@ -188,7 +188,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Pricing */}
+            {/* Pricing
             <section id="pricing" className="py-24 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
@@ -197,7 +197,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                        {/* Starter */}
+                        Starter
                         <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col">
                             <h3 className="text-2xl font-bold text-slate-900 mb-2">{t('landing.pricing.starter.title')}</h3>
                             <div className="text-4xl font-bold text-slate-900 mb-6">25 €<span className="text-lg text-slate-500 font-normal">/мес</span></div>
@@ -217,7 +217,7 @@ export default function LandingPage() {
                             </button>
                         </div>
 
-                        {/* Pro */}
+                        Pro
                         <div className="bg-white p-8 rounded-2xl shadow-xl border-2 border-emerald-500 relative flex flex-col transform md:-translate-y-4">
                             <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">{t('landing.pricing.pro.badge')}</div>
                             <h3 className="text-2xl font-bold text-slate-900 mb-2">{t('landing.pricing.pro.title')}</h3>
@@ -238,7 +238,7 @@ export default function LandingPage() {
                             </button>
                         </div>
 
-                        {/* Enterprise */}
+                        Enterprise
                         <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col">
                             <h3 className="text-2xl font-bold text-slate-900 mb-2">{t('landing.pricing.enterprise.title')}</h3>
                             <div className="text-4xl font-bold text-slate-900 mb-6">200 €<span className="text-lg text-slate-500 font-normal">/мес</span></div>
@@ -259,7 +259,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             {/* CTA Section */}
             <section className="py-24 bg-white">

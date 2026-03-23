@@ -165,6 +165,7 @@ export default function Register() {
         >
           {/* Logo */}
           <div className="text-center mb-8">
+            <Link to={"/"}>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -194,6 +195,7 @@ export default function Register() {
             >
               {t('auth.register.subtitle')}
             </motion.p>
+            </Link>
           </div>
 
           {/* Register Card */}
@@ -331,17 +333,6 @@ export default function Register() {
             </Card>
           </motion.div>
 
-          {/* Security note */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl"
-          >
-            <p className="text-xs text-emerald-600 text-center">
-              🔒 {t('auth.register.securityNote')}
-            </p>
-          </motion.div>
         </motion.div>
       </div>
     </div>

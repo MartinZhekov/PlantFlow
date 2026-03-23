@@ -147,6 +147,7 @@ export default function SignIn() {
         >
           {/* Logo */}
           <div className="text-center mb-8">
+            <Link to={"/"}>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -175,7 +176,9 @@ export default function SignIn() {
               className="text-slate-500 mt-2"
             >
               {t('auth.login.subtitle')}
-            </motion.p>
+             
+            </motion.p> 
+            </Link>
           </div>
 
           {/* Login Card */}
@@ -265,18 +268,6 @@ export default function SignIn() {
                 </form>
               </CardContent>
             </Card>
-          </motion.div>
-
-          {/* Demo credentials hint */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl"
-          >
-            <p className="text-xs text-blue-600 text-center">
-              💡 <strong>Демо:</strong> demo@plantpulse.com / demo123 (Или създайте нов акаунт!)
-            </p>
           </motion.div>
         </motion.div>
       </div>
